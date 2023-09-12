@@ -25,7 +25,7 @@ export class LoginComponent implements AfterViewInit {
       [Validators.required, Validators.email],
     ],
     password: ['', Validators.required],
-    remember: [false],
+    remember: [true],
   });
 
   constructor(

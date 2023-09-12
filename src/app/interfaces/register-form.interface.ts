@@ -5,3 +5,7 @@ export interface RegisterForm {
   password2: string;
   terminos: boolean;
 }
+export interface UsuarioActualizado {
+  ok: boolean;
+  usuario: object;
+}
