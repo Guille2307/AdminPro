@@ -32,7 +32,9 @@ export class UsuarioService {
   get role(): string {
     return this.usuario.role || '';
   }
-
+  get headers() {
+    return { headers: { 'x-token': this.token } };
+  }
   validarToken(): Observable<boolean> {
     return this.http
       .get(`${base_url}/login/renew`, {
@@ -58,11 +60,17 @@ export class UsuarioService {
     );
   }
 
-  actualizarPerfil(data: { email: string; nombre: string; role: string }) {
-    data = { ...data, role: this.role };
-    return this.http.put(`${base_url}/usuarios/${this.uid}`, data, {
-      headers: { 'x-token': this.token },
-    });
+  actualizarPerfil(data: {
+    email: string;
+    nombre: string;
+    role: string | undefined;
+  }) {
+    data = { ...data, role: this.usuario.role };
+    return this.http.put(
+      `${base_url}/usuarios/${this.uid}`,
+      data,
+      this.headers
+    );
   }
 
   login(formData: any) {
@@ -93,5 +101,45 @@ export class UsuarioService {
       localStorage.removeItem('token');
       this.router.navigateByUrl('/auth/login');
     }
+  }
+  cargarUsuarios(desde: number = 0) {
+    return this.http
+      .get<{ total: number; usuarios: Usuario[] }>(
+        `${base_url}/usuarios?desde=${desde}`,
+        this.headers
+      )
+      .pipe(
+        map((resp) => {
+          const usuarios = resp.usuarios.map(
+            (user) =>
+              new Usuario(
+                user.nombre,
+                user.email,
+                '',
+                user.img,
+                user.google,
+                user.role,
+                user.uid
+              )
+          );
+          return {
+            total: resp.total,
+            usuarios,
+          };
+        })
+      );
+  }
+  eliminarUsuario(usuario: Usuario) {
+    return this.http.delete(
+      `${base_url}/usuarios/${usuario.uid}`,
+      this.headers
+    );
+  }
+  guardarUsuario(usuario: Usuario) {
+    return this.http.put(
+      `${base_url}/usuarios/${usuario.uid}`,
+      usuario,
+      this.headers
+    );
   }
 }
