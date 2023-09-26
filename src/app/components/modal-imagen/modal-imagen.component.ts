@@ -39,7 +39,7 @@ export class ModalImagenComponent {
     this.fileUploadService
       .actualizarFoto(this.imagenSubir, tipo, id)
       .then((img) => {
-        Swal.fire('succcess', '', 'success');
+        Swal.fire('Exito', 'Actualizo su imagen correctamente', 'success');
         this.modalImagenService.nuevaImagen.emit(img);
         this.cerrarModal();
       })

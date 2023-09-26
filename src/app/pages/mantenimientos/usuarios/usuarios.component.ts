@@ -85,7 +85,7 @@ export class UsuariosComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.busquedasService
       .buscar('usuarios', this.termino)
       .subscribe((resultados) => {
-        this.usuarios = resultados;
+        this.usuarios = resultados as Usuario[];
       });
   }
 
@@ -99,6 +99,13 @@ export class UsuariosComponent implements OnInit, AfterViewInit, OnDestroy {
       return Swal.fire(
         'Error',
         'No puede borrar el usuario actual ya que está en uso',
+        'error'
+      );
+    }
+    if (this.usuarioService.role === 'USER_ROLE') {
+      return Swal.fire(
+        'Error',
+        'No puede borrar el usuario no cuenta con los permisos necesarios, hable con el administrador',
         'error'
       );
     }
