@@ -35,6 +35,11 @@ export class UsuarioService {
   get headers() {
     return { headers: { 'x-token': this.token } };
   }
+
+  guardarLocalStorage(token: string, menu: any) {
+    localStorage.setItem('token', token);
+    localStorage.setItem('menu', JSON.stringify(menu));
+  }
   validarToken(): Observable<boolean> {
     return this.http
       .get(`${base_url}/login/renew`, {
@@ -44,7 +49,7 @@ export class UsuarioService {
         map((resp: any) => {
           const { email, google, nombre, role, uid, img = '' } = resp.usuario;
           this.usuario = new Usuario(nombre, email, '', img, google, role, uid);
-          localStorage.setItem('token', resp.token);
+          this.guardarLocalStorage(resp.token, resp.menu);
           return true;
         }),
 
@@ -55,7 +60,7 @@ export class UsuarioService {
   crearUsuario(formData: any) {
     return this.http.post(`${base_url}/usuarios`, formData).pipe(
       tap((resp: any) => {
-        localStorage.setItem('token', resp.token);
+        this.guardarLocalStorage(resp.token, resp.menu);
       })
     );
   }
@@ -76,7 +81,7 @@ export class UsuarioService {
   login(formData: any) {
     return this.http.post(`${base_url}/login`, formData).pipe(
       tap((resp: any) => {
-        localStorage.setItem('token', resp.token);
+        this.guardarLocalStorage(resp.token, resp.menu);
       })
     );
   }
@@ -84,7 +89,7 @@ export class UsuarioService {
   loginGoogle(token: string) {
     return this.http.post(`${base_url}/login/google`, { token }).pipe(
       tap((resp: any) => {
-        localStorage.setItem('token', resp.token);
+        this.guardarLocalStorage(resp.token, resp.menu);
       })
     );
   }
@@ -92,6 +97,7 @@ export class UsuarioService {
   logout() {
     if (this.usuario.google) {
       localStorage.removeItem('token');
+      localStorage.removeItem('menu');
       google.accounts.id.revoke(this.usuario.email, () => {
         this.ngZone.run(() => {
           this.router.navigateByUrl('/auth/login');
@@ -99,6 +105,8 @@ export class UsuarioService {
       });
     } else {
       localStorage.removeItem('token');
+      localStorage.removeItem('menu');
+
       this.router.navigateByUrl('/auth/login');
     }
   }

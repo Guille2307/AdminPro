@@ -12,6 +12,7 @@ import { Medico } from 'src/app/models/medico.model';
 import { BusquedasService } from 'src/app/services/busquedas.service';
 import { MedicoService } from 'src/app/services/medico.service';
 import { ModalImagenService } from 'src/app/services/modal-imagen.service';
+import { UsuarioService } from 'src/app/services/usuario.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -27,6 +28,7 @@ export class MedicosComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('input', { static: true }) input!: ElementRef;
 
   constructor(
+    public usuarioService: UsuarioService,
     private medicoService: MedicoService,
     private modalImagenSevice: ModalImagenService,
     private busquedasService: BusquedasService
@@ -59,11 +61,15 @@ export class MedicosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   abrirModal(medico: Medico) {
-    this.modalImagenSevice.abrirModal(
-      'medicos',
-      medico._id as string,
-      medico.img
-    );
+    if (medico && this.usuarioService.role === 'ADMIN_ROLE') {
+      this.modalImagenSevice.abrirModal(
+        'medicos',
+        medico._id as string,
+        medico.img
+      );
+    } else {
+      Swal.fire('Error', 'No tiene Privilegios de Administrador', 'error');
+    }
   }
 
   buscar(termino: string) {
@@ -85,10 +91,15 @@ export class MedicosComponent implements OnInit, AfterViewInit, OnDestroy {
       denyButtonText: `No borrar`,
     }).then((result) => {
       if (result.isConfirmed) {
-        this.medicoService.borrarMedico(medico._id).subscribe((resp) => {
-          Swal.fire('Eliminado', medico.nombre, 'success');
-          this.cargarMedicos();
-        });
+        if (this.usuarioService.role !== 'ADMIN_ROLE') {
+          Swal.fire('Error', 'No tiene Privilegios de Administrador', 'error');
+        }
+        if (this.usuarioService.role === 'ADMIN_ROLE') {
+          this.medicoService.borrarMedico(medico._id).subscribe((resp) => {
+            Swal.fire('Eliminado', medico.nombre, 'success');
+            this.cargarMedicos();
+          });
+        }
       } else if (result.isDenied) {
         Swal.fire('No se realizaron cambios', '', 'info');
       }

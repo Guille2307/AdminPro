@@ -9,9 +9,11 @@ import {
 import { Subscription, fromEvent } from 'rxjs';
 import { debounceTime, delay } from 'rxjs/operators';
 import { Hospital } from 'src/app/models/hospital.model';
+import { Usuario } from 'src/app/models/usuario.model';
 import { BusquedasService } from 'src/app/services/busquedas.service';
 import { HospitalService } from 'src/app/services/hospital.service';
 import { ModalImagenService } from 'src/app/services/modal-imagen.service';
+import { UsuarioService } from 'src/app/services/usuario.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -25,9 +27,11 @@ export class HospitalesComponent implements OnInit, OnDestroy, AfterViewInit {
   public imgSubs!: Subscription;
   public termino: string = '';
   public hospitalesTemp: Hospital[] = [];
+  public usuario: any = this.usuarioService.usuario.role;
   @ViewChild('input', { static: true }) input!: ElementRef;
 
   constructor(
+    public usuarioService: UsuarioService,
     private hospitalService: HospitalService,
     private modalImagenSevice: ModalImagenService,
     private busquedasService: BusquedasService
@@ -61,11 +65,16 @@ export class HospitalesComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   guardarCambios(hospital: Hospital) {
-    this.hospitalService
-      .actualizarHospital(hospital._id, hospital.nombre)
-      .subscribe((resp) => {
-        Swal.fire('Actualizado', hospital.nombre, 'success');
-      });
+    if (this.usuarioService.role !== 'ADMIN_ROLE') {
+      Swal.fire('Error', 'No tiene Privilegios de Administrador', 'error');
+    }
+    if (this.usuarioService.role === 'ADMIN_ROLE') {
+      this.hospitalService
+        .actualizarHospital(hospital._id, hospital.nombre)
+        .subscribe((resp) => {
+          Swal.fire('Actualizado', hospital.nombre, 'success');
+        });
+    }
   }
   eliminarHospital(hospital: Hospital) {
     Swal.fire({
@@ -75,10 +84,17 @@ export class HospitalesComponent implements OnInit, OnDestroy, AfterViewInit {
       denyButtonText: `No borrar`,
     }).then((result) => {
       if (result.isConfirmed) {
-        this.hospitalService.borrarHospital(hospital._id).subscribe((resp) => {
-          Swal.fire('Eliminado', hospital.nombre, 'success');
-          this.cargarHospitales();
-        });
+        if (this.usuarioService.role !== 'ADMIN_ROLE') {
+          Swal.fire('Error', 'No tiene Privilegios de Administrador', 'error');
+        }
+        if (this.usuarioService.role === 'ADMIN_ROLE') {
+          this.hospitalService
+            .borrarHospital(hospital._id)
+            .subscribe((resp) => {
+              Swal.fire('Eliminado', hospital.nombre, 'success');
+              this.cargarHospitales();
+            });
+        }
       } else if (result.isDenied) {
         Swal.fire('No se realizaron cambios', '', 'info');
       }
@@ -95,8 +111,14 @@ export class HospitalesComponent implements OnInit, OnDestroy, AfterViewInit {
         showCancelButton: true,
         cancelButtonColor: '#d33',
       });
+      if (this.usuarioService.role !== 'ADMIN_ROLE') {
+        Swal.fire('Error', 'No tiene Privilegios de Administrador', 'error');
+      }
 
-      if (value!.trim().length > 0) {
+      if (
+        value!.trim().length > 0 &&
+        this.usuarioService.role === 'ADMIN_ROLE'
+      ) {
         this.hospitalService.crearHospital(value).subscribe((resp: any) => {
           Swal.fire('Creado', value, 'success');
           this.hospitales.push(resp.hospital);
@@ -108,11 +130,15 @@ export class HospitalesComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   abrirModal(hospital: Hospital) {
-    this.modalImagenSevice.abrirModal(
-      'hospitales',
-      hospital._id as string,
-      hospital.img
-    );
+    if (hospital && this.usuarioService.role === 'ADMIN_ROLE') {
+      this.modalImagenSevice.abrirModal(
+        'hospitales',
+        hospital._id as string,
+        hospital.img
+      );
+    } else {
+      Swal.fire('Error', 'No tiene Privilegios de Administrador', 'error');
+    }
   }
 
   buscar(termino: string) {
