@@ -86,15 +86,13 @@
             <img
               class="img-thumbmail"
               [src]="hospitalSeleccionado!.img | imagen : 'hospitales'"
-              alt=""
             />
           </div>
         </div>
         <div *ngIf="!hospitalSeleccionado" class="text-center">
           <img
             class="w200"
-            src="http://localhost:3000/api/upload/usuario/no-image"
-            alt=""
+            src="https://admin-pro-back-production.up.railway.app/api/upload/usuario/no-image"
           />
         </div>
       </div>

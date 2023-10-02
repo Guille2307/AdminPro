@@ -72,7 +72,11 @@ export class LoginComponent implements AfterViewInit {
         this.router.navigateByUrl('/');
       },
       error: (err) => {
-        Swal.fire('Error', err.error.msg, 'error');
+        Swal.fire(
+          'Error',
+          'Las credenciales no son correctas verifique su email o su password',
+          'error'
+        );
       },
     });
   }
